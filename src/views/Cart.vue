@@ -1,184 +1,284 @@
 <template>
-  <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+  <div class="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
     <AppHeader :cart-count="cartCount" />
-    <main class="flex-1 py-12">
-      <div class="mx-auto grid max-w-4xl grid-cols-1 gap-12 px-4 lg:grid-cols-2">
-        <!-- Resumen del pedido -->
-        <div class="flex flex-col gap-8">
-          <div>
-            <h2 class="text-2xl font-bold tracking-tight">Revisa tu pedido</h2>
-            <p class="text-slate-500 dark:text-slate-400 mt-1">Confirma los detalles de tu compra.</p>
-          </div>
-          
-          <!-- Artículos -->
-          <div class="space-y-4">
-            <h3 class="text-lg font-bold">Artículos</h3>
-            <div class="space-y-4 rounded-lg border border-slate-200 dark:border-slate-800 p-4">
-              <div v-for="(item, index) in cartItems" :key="index" class="flex items-center justify-between gap-4">
-                <div class="flex items-center gap-4">
-                  <div class="h-16 w-16 flex-shrink-0 rounded-lg bg-cover bg-center" :style="`background-image: url('${item.image}')`"></div>
-                  <div>
-                    <p class="font-medium">{{ item.name }}</p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">{{ item.details }}</p>
-                  </div>
-                </div>
-                <p class="font-medium">${{ item.price }}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Total -->
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <p class="text-slate-500 dark:text-slate-400">Subtotal</p>
-              <p class="font-medium">${{ subtotal }}</p>
-            </div>
-            <div class="flex items-center justify-between">
-              <p class="text-slate-500 dark:text-slate-400">Envío</p>
-              <p class="font-medium">${{ shipping }}</p>
-            </div>
-            <div class="border-t border-slate-200 dark:border-slate-800 pt-4 flex items-center justify-between">
-              <p class="text-lg font-bold">Total</p>
-              <p class="text-lg font-bold">${{ total }}</p>
-            </div>
-          </div>
+    
+    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="max-w-6xl mx-auto">
+        <!-- Header del Carrito -->
+        <div class="text-center mb-12">
+          <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+            Tu Carrito
+          </h1>
+          <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">
+            Revisa y gestiona tus productos personalizados
+          </p>
         </div>
 
-        <!-- Formulario de pago -->
-        <div class="flex flex-col gap-8">
-          <form @submit.prevent="processPayment" class="space-y-6">
-            <!-- Información de envío -->
-            <div>
-              <h3 class="text-lg font-bold">Información de envío</h3>
-              <div class="mt-4 grid grid-cols-1 gap-4">
-                <div>
-                  <label class="text-sm font-medium" for="name">Nombre</label>
-                  <input 
-                    v-model="shippingInfo.name"
-                    class="form-input mt-1 block w-full rounded-lg border-slate-300 bg-background-light dark:border-slate-700 dark:bg-background-dark focus:border-primary focus:ring-primary" 
-                    id="name" 
-                    placeholder="Ingresa tu nombre"
-                    required
-                  />
+        <!-- Carrito Vacío -->
+        <div v-if="cartItems.length === 0" class="text-center bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-12">
+          <div class="text-6xl text-purple-400 mb-6">
+            <span class="material-symbols-outlined">shopping_cart</span>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+            Tu carrito está vacío
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300 mb-8 max-w-md mx-auto">
+            Agrega algunos productos personalizados para comenzar tu pedido.
+          </p>
+          <button 
+            @click="$router.push('/')"
+            class="px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-600 hover:to-blue-600 transition-all duration-300 transform hover:-translate-y-0.5"
+          >
+            <span class="material-symbols-outlined align-middle mr-2">add_circle</span>
+            Agregar Productos
+          </button>
+        </div>
+
+        <!-- Carrito con Productos -->
+        <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Lista de Productos -->
+          <div class="lg:col-span-2 space-y-6">
+            <!-- Productos -->
+            <div 
+              v-for="item in cartItems" 
+              :key="item.id"
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl"
+            >
+              <div class="flex flex-col sm:flex-row gap-6">
+                <!-- Icono del Producto -->
+                <div class="flex-shrink-0 w-20 h-20 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+                  <span class="material-symbols-outlined text-3xl text-purple-600 dark:text-purple-400">
+                    {{ getProductIcon(item.productType) }}
+                  </span>
                 </div>
-                <div>
-                  <label class="text-sm font-medium" for="address">Dirección</label>
-                  <input 
-                    v-model="shippingInfo.address"
-                    class="form-input mt-1 block w-full rounded-lg border-slate-300 bg-background-light dark:border-slate-700 dark:bg-background-dark focus:border-primary focus:ring-primary" 
-                    id="address" 
-                    placeholder="Ingresa tu dirección"
-                    required
-                  />
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="text-sm font-medium" for="city">Ciudad</label>
-                    <input 
-                      v-model="shippingInfo.city"
-                      class="form-input mt-1 block w-full rounded-lg border-slate-300 bg-background-light dark:border-slate-700 dark:bg-background-dark focus:border-primary focus:ring-primary" 
-                      id="city" 
-                      placeholder="Ingresa tu ciudad"
-                      required
-                    />
+
+                <!-- Información del Producto -->
+                <div class="flex-grow">
+                  <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
+                    <div>
+                      <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">
+                        {{ item.productName }}
+                      </h3>
+                      <p class="text-gray-600 dark:text-gray-300 text-sm">
+                        Archivo: {{ item.fileName }}
+                      </p>
+                      <p v-if="item.notes" class="text-gray-500 dark:text-gray-400 text-sm mt-2">
+                        Notas: {{ item.notes }}
+                      </p>
+                    </div>
+                    
+                    <!-- Precio (placeholder) -->
+                    <div class="mt-2 sm:mt-0 text-right">
+                      <p class="text-lg font-bold text-purple-600 dark:text-purple-400">
+                        Por cotizar
+                      </p>
+                      <p class="text-sm text-gray-500 dark:text-gray-400">
+                        Referencia: {{ item.reference }}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <label class="text-sm font-medium" for="postal-code">Código Postal</label>
-                    <input 
-                      v-model="shippingInfo.postalCode"
-                      class="form-input mt-1 block w-full rounded-lg border-slate-300 bg-background-light dark:border-slate-700 dark:bg-background-dark focus:border-primary focus:ring-primary" 
-                      id="postal-code" 
-                      placeholder="Ingresa tu código postal"
-                      required
-                    />
+
+                  <!-- Acciones -->
+                  <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                      Agregado: {{ formatDate(item.date) }}
+                    </span>
+                    
+                    <button 
+                      @click="removeItem(item.id)"
+                      class="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors duration-200 flex items-center"
+                    >
+                      <span class="material-symbols-outlined text-lg mr-1">delete</span>
+                      Eliminar
+                    </button>
                   </div>
-                </div>
-                <div>
-                  <label class="text-sm font-medium" for="country">País</label>
-                  <select 
-                    v-model="shippingInfo.country"
-                    class="form-select mt-1 block w-full rounded-lg border-slate-300 bg-background-light dark:border-slate-700 dark:bg-background-dark focus:border-primary focus:ring-primary" 
-                    id="country"
-                    required
-                  >
-                    <option value="">Selecciona un país</option>
-                    <option value="México">México</option>
-                    <option value="España">España</option>
-                    <option value="Argentina">Argentina</option>
-                  </select>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Método de pago -->
-            <div>
-              <h3 class="text-lg font-bold">Método de pago</h3>
-              <div class="mt-4 grid grid-cols-1 gap-4">
-                <div class="space-y-2">
-                  <label class="flex cursor-pointer items-center gap-4 rounded-lg border border-slate-300 dark:border-slate-700 p-4 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                    <input 
-                      v-model="paymentMethod"
-                      value="credit"
-                      class="form-radio h-5 w-5 border-slate-300 dark:border-slate-700 text-primary focus:ring-primary" 
-                      name="payment" 
-                      type="radio"
-                    />
-                    <span class="font-medium">Tarjeta de crédito</span>
-                  </label>
-                  <label class="flex cursor-pointer items-center gap-4 rounded-lg border border-slate-300 dark:border-slate-700 p-4 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                    <input 
-                      v-model="paymentMethod"
-                      value="paypal"
-                      class="form-radio h-5 w-5 border-slate-300 dark:border-slate-700 text-primary focus:ring-primary" 
-                      name="payment" 
-                      type="radio"
-                    />
-                    <span class="font-medium">PayPal</span>
-                  </label>
+          <!-- Resumen del Pedido -->
+          <div class="lg:col-span-1">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 sticky top-6">
+              <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-6">
+                Resumen del Pedido
+              </h3>
+
+              <!-- Detalles -->
+              <div class="space-y-4 mb-6">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 dark:text-gray-300">Productos:</span>
+                  <span class="font-semibold text-gray-800 dark:text-white">
+                    {{ cartItems.length }}
+                  </span>
                 </div>
                 
-                <div v-if="paymentMethod === 'credit'">
-                  <label class="text-sm font-medium" for="card-number">Número de tarjeta</label>
-                  <input 
-                    v-model="paymentInfo.cardNumber"
-                    class="form-input mt-1 block w-full rounded-lg border-slate-300 bg-background-light dark:border-slate-700 dark:bg-background-dark focus:border-primary focus:ring-primary" 
-                    id="card-number" 
-                    placeholder="•••• •••• •••• ••••"
-                  />
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 dark:text-gray-300">Estado:</span>
+                  <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-full text-sm font-medium">
+                    Por cotizar
+                  </span>
                 </div>
-                <div v-if="paymentMethod === 'credit'" class="grid grid-cols-2 gap-4">
+              </div>
+
+              <!-- Total -->
+              <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mb-6">
+                <div class="flex justify-between items-center text-lg font-bold">
+                  <span class="text-gray-800 dark:text-white">Total estimado:</span>
+                  <span class="text-purple-600 dark:text-purple-400">
+                    Por cotizar
+                  </span>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                  * Los precios finales serán confirmados por nuestro equipo
+                </p>
+              </div>
+
+              <!-- Botones de Acción -->
+              <div class="space-y-4">
+                <button 
+                  @click="showContactModal = true"
+                  :disabled="cartItems.length === 0"
+                  :class="[
+                    'w-full px-6 py-4 rounded-xl font-semibold shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center',
+                    cartItems.length > 0
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-xl hover:from-green-600 hover:to-emerald-700'
+                      : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                  ]"
+                >
+                  <span class="material-symbols-outlined mr-2">whatsapp</span>
+                  Solicitar Cotización
+                </button>
+                
+                <button 
+                  @click="$router.push('/')"
+                  class="w-full px-6 py-4 border-2 border-purple-500 text-purple-600 dark:text-purple-400 dark:border-purple-400 rounded-xl font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300 flex items-center justify-center"
+                >
+                  <span class="material-symbols-outlined mr-2">add_circle</span>
+                  Agregar Más Productos
+                </button>
+                
+                <button 
+                  @click="clearCart"
+                  class="w-full px-6 py-4 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors duration-200 flex items-center justify-center"
+                >
+                  <span class="material-symbols-outlined mr-2">delete_sweep</span>
+                  Vaciar Carrito
+                </button>
+              </div>
+
+              <!-- Información Adicional -->
+              <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                <div class="flex items-start space-x-3">
+                  <span class="material-symbols-outlined text-blue-500 text-lg mt-0.5">info</span>
                   <div>
-                    <label class="text-sm font-medium" for="expiry-date">Fecha de expiración</label>
-                    <input 
-                      v-model="paymentInfo.expiryDate"
-                      class="form-input mt-1 block w-full rounded-lg border-slate-300 bg-background-light dark:border-slate-700 dark:bg-background-dark focus:border-primary focus:ring-primary" 
-                      id="expiry-date" 
-                      placeholder="MM/AA"
-                    />
-                  </div>
-                  <div>
-                    <label class="text-sm font-medium" for="cvc">CVC</label>
-                    <input 
-                      v-model="paymentInfo.cvc"
-                      class="form-input mt-1 block w-full rounded-lg border-slate-300 bg-background-light dark:border-slate-700 dark:bg-background-dark focus:border-primary focus:ring-primary" 
-                      id="cvc" 
-                      placeholder="123"
-                    />
+                    <p class="text-sm text-blue-700 dark:text-blue-300">
+                      Te contactaremos para confirmar precios y detalles de tu pedido.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-
-            <button 
-              type="submit"
-              class="w-full rounded-lg bg-primary py-3 text-base font-bold text-white shadow-sm hover:bg-primary/90"
-            >
-              Pagar ${{ total }}
-            </button>
-          </form>
+          </div>
         </div>
       </div>
     </main>
+
+    <!-- Modal de Información de Contacto -->
+    <transition name="modal-fade">
+      <div 
+        v-if="showContactModal" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all duration-300"
+        @click.self="showContactModal = false"
+      >
+        <div class="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-md w-full mx-auto transform transition-all duration-500 scale-95 hover:scale-100">
+          <!-- Header -->
+          <div class="bg-gradient-to-r from-purple-500 to-blue-500 rounded-t-3xl p-8 text-center">
+            <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+              <span class="material-symbols-outlined text-4xl text-white">
+                person
+              </span>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">
+              Información de Contacto
+            </h3>
+            <p class="text-white/90">
+              Completa tus datos para la cotización
+            </p>
+          </div>
+
+          <!-- Formulario -->
+          <div class="p-6">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Tu Nombre Completo *
+                </label>
+                <input 
+                  v-model="customerInfo.name"
+                  type="text"
+                  class="w-full rounded-xl p-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                  placeholder="Ej: María González"
+                  required
+                >
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Tu Número de WhatsApp *
+                </label>
+                <input 
+                  v-model="customerInfo.phone"
+                  type="tel"
+                  class="w-full rounded-xl p-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                  placeholder="Ej: 50412345678"
+                  required
+                >
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Usaremos este número para contactarte
+                </p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Tu Email (Opcional)
+                </label>
+                <input 
+                  v-model="customerInfo.email"
+                  type="email"
+                  class="w-full rounded-xl p-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                  placeholder="Ej: tu@email.com"
+                >
+              </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex gap-3 mt-6">
+              <button 
+                @click="showContactModal = false"
+                class="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300"
+              >
+                Cancelar
+              </button>
+              
+              <button 
+                @click="openWhatsAppDirectly"
+                :disabled="!canSubmitQuote"
+                :class="[
+                  'flex-1 px-4 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center',
+                  canSubmitQuote
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg hover:shadow-xl'
+                    : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                ]"
+              >
+                <span class="material-symbols-outlined mr-2">send</span>
+                Abrir WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -192,65 +292,165 @@ export default {
   },
   data() {
     return {
-      cartItems: [
-        {
-          name: 'Camiseta personalizada',
-          details: 'Talla M',
-          price: 25.00,
-          image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAm74cleNlxBqRan5FfNibSUCvnxgzr_WDo3cU6X6JQhx93lYQeCx1qs6ovpGCZZ07iJNcQOEf30dk4me-gkiixyCevg9fc9ZoRc8ktdCktxK3limVK9vilwAy39DGNF7uXodAbfSrvy5gwYNesYkoGAuVErgqrJW91LIXOz7fRIwsRvMV-qfmTOV-iRB_O7HXoxFGl16CUHyd1muyxDWyNUbqiTldnXqKkbtuh2pPYraonUQ4zX0-_oaEbSuuiLsvu6G3eHdyin0BK'
-        },
-        {
-          name: 'Taza con diseño',
-          details: '11 oz',
-          price: 15.00,
-          image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCsw0l7cA2m93GTRD2jpiYBKJoUK6j4JEyy8up-uQAj9lBoxyqToFbEkh0ZnyBYKf0-bHm4fO9kWZurs9tw6pw3LpV8nYOTdA6GbMkg8hSVlr3HcG4cTc6rgy2o4juX1Ep3DoIpccb_ctdtLlpq-Nh3sTYb8UKi2BQDSBWRmxAKrkEVH6FLN6rIFj7JBMCGxTEAotscigswaSnLMT6FqHKxgXc6eSiIPt8Ifnm8Coh4eE97mXtaO8kTIYlxCn6JNNo6pwbFIo3_v60M'
-        },
-        {
-          name: 'Gorra personalizada',
-          details: 'Ajustable',
-          price: 20.00,
-          image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA9j0hnp9zByj1s4ryTRb1Ozkq6XEIBzVxy9WBx-zZuU4Ug_uhqHgyuWS286BfzmFI8YGNmDEf1X_Zx3tNX8WyHPeF8IBamKdkOH-TXcJSG5aVYX_dn6JAK6itLqeLNCm0OT9i--6mwbjFhm-sGqmTuEqeYGhfdV8_e2RWl9AzwrkFdsTlir8ro5tzj_l6FwZJTBllnRoIV9FsHwqO7DMvKDlpunECjug0wBrSdMNb0lSDUzho_SXQtNgBfwmXlG0moPdRq270n4zeA'
-        }
-      ],
-      shipping: 5.00,
-      shippingInfo: {
+      cartItems: [],
+      cartCount: 0,
+      showContactModal: false,
+      customerInfo: {
         name: '',
-        address: '',
-        city: '',
-        postalCode: '',
-        country: ''
+        phone: '',
+        email: ''
       },
-      paymentMethod: 'credit',
-      paymentInfo: {
-        cardNumber: '',
-        expiryDate: '',
-        cvc: ''
-      }
+      // ¡IMPORTANTE! CAMBIA ESTE NÚMERO POR EL DE PIGMAPRINT
+      pigmaprintWhatsApp: '50496422659' // Solo números, sin el +
     }
   },
   computed: {
-    cartCount() {
-      return this.cartItems.length
-    },
-    subtotal() {
-      return this.cartItems.reduce((sum, item) => sum + item.price, 0)
-    },
-    total() {
-      return this.subtotal + this.shipping
+    canSubmitQuote() {
+      return this.customerInfo.name.trim() !== '' && 
+             this.customerInfo.phone.trim() !== '' &&
+             this.cartItems.length > 0
     }
   },
+  mounted() {
+    this.loadCart()
+  },
   methods: {
-    processPayment() {
-      // Aquí iría la lógica de procesamiento de pago
-      console.log('Procesando pago...', {
-        shippingInfo: this.shippingInfo,
-        paymentMethod: this.paymentMethod,
-        paymentInfo: this.paymentInfo
+    loadCart() {
+      const savedCart = localStorage.getItem('pigmaprint_cart')
+      if (savedCart) {
+        this.cartItems = JSON.parse(savedCart)
+        this.cartCount = this.cartItems.length
+      }
+    },
+    
+    getProductIcon(productType) {
+      const icons = {
+        camiseta: 'checkroom',
+        taza: 'coffee',
+        termo: 'water_bottle',
+        gorra: 'sports_baseball',
+        vaso: 'liquor',
+        hoodie: 'account_circle',
+        otros: 'category'
+      }
+      return icons[productType] || 'category'
+    },
+    
+    formatDate(dateString) {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
       })
-      
-      // Redirigir a confirmación
-      this.$router.push('/confirmation')
-    }
+    },
+    
+    removeItem(itemId) {
+      this.cartItems = this.cartItems.filter(item => item.id !== itemId)
+      this.saveCart()
+      this.cartCount = this.cartItems.length
+    },
+    
+    clearCart() {
+      if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
+        this.cartItems = []
+        this.saveCart()
+        this.cartCount = 0
+      }
+    },
+    
+    saveCart() {
+      localStorage.setItem('pigmaprint_cart', JSON.stringify(this.cartItems))
+    },
+
+    openWhatsAppDirectly() {
+      if (!this.canSubmitQuote) {
+        alert('Por favor completa tu nombre y número de WhatsApp')
+        return
+      }
+
+      try {
+        // Número de Pigmaprint - ¡CAMBIA ESTE NÚMERO!
+        const pigmaprintNumber = this.pigmaprintWhatsApp.replace(/\D/g, '')
+        
+        if (pigmaprintNumber.length < 8) {
+          alert('Error: Número de WhatsApp no configurado correctamente')
+          return
+        }
+
+        // Crear mensaje completo
+        const reference = 'PM-' + Date.now().toString().slice(-8)
+        const currentDate = new Date().toLocaleDateString('es-ES')
+        
+        let message = `¡Hola Pigmaprint! 👋%0A%0A`
+        message += `Me gustaría solicitar una cotización para los siguientes productos:%0A%0A`
+
+        // Información del cliente
+        message += `*📋 INFORMACIÓN DEL CLIENTE:*%0A`
+        message += `👤 *Nombre:* ${this.customerInfo.name}%0A`
+        message += `📞 *WhatsApp:* ${this.customerInfo.phone}%0A`
+        if (this.customerInfo.email) {
+          message += `📧 *Email:* ${this.customerInfo.email}%0A`
+        }
+
+        message += `%0A*📦 DETALLES DEL PEDIDO:*%0A`
+        message += `🔖 *Referencia:* ${reference}%0A`
+        message += `📅 *Fecha:* ${currentDate}%0A`
+        message += `🛒 *Total de productos:* ${this.cartItems.length}%0A%0A`
+
+        // Productos
+        message += `*🎨 PRODUCTOS SOLICITADOS:*%0A%0A`
+        
+        this.cartItems.forEach((item, index) => {
+          message += `*${index + 1}. ${item.productName}*%0A`
+          message += `   📎 *Archivo:* ${item.fileName}%0A`
+          if (item.notes && item.notes.trim() !== '') {
+            message += `   📝 *Notas:* ${item.notes}%0A`
+          }
+          message += `   🔖 *Ref. interna:* ${item.reference}%0A%0A`
+        })
+
+        message += `*💬 INFORMACIÓN ADICIONAL:*%0A`
+        message += `Por favor envíenme la cotización detallada para estos productos. ¡Quedo atento(a) a su respuesta! 🙏%0A%0A`
+        message += `_--- Mensaje generado desde Pigmaprint Web ---_`
+
+        // Crear URL de WhatsApp
+        const whatsappURL = `https://wa.me/${pigmaprintNumber}?text=${message}`
+        
+        console.log('URL de WhatsApp generada:', whatsappURL)
+
+        // Abrir WhatsApp directamente
+        window.open(whatsappURL, '_blank', 'noopener,noreferrer')
+        
+        // Cerrar modal
+        this.showContactModal = false
+        
+        // Mostrar mensaje de confirmación después de un momento
+        setTimeout(() => {
+          alert('✅ Se ha abierto WhatsApp con tu pedido. Por favor envía el mensaje para completar tu solicitud.')
+        }, 1000)
+
+      } catch (error) {
+        console.error('Error al abrir WhatsApp:', error)
+        alert('Error al abrir WhatsApp. Por favor intenta nuevamente.')
+      }
+    },
+
+    // ELIMINAR CUALQUIER MÉTODO QUE TENGA ESTE NOMBRE O SIMILAR
+    // NO DEBE EXISTIR NINGÚN proceedToCheckout O sendWhatsAppMessage
+    
   }
 }
 </script>
+
+<style scoped>
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+</style>

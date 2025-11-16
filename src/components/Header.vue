@@ -9,10 +9,10 @@
 
       <!-- Menú para desktop -->
       <nav class="hidden lg:flex items-center gap-6">
-        <a class="text-sm font-medium hover:text-primary transition-colors" href="#inicio">Inicio</a>
-        <a class="text-sm font-medium hover:text-primary transition-colors" href="#gallery">Productos</a>
-        <a class="text-sm font-medium hover:text-primary transition-colors" href="#carga-diseno">Diseña tu prenda</a>
-        <a class="text-sm font-medium hover:text-primary transition-colors" href="#contacto">Contacto</a>
+        <a class="text-sm font-medium hover:text-primary transition-colors" href="/#inicio">Inicio</a>
+        <a class="text-sm font-medium hover:text-primary transition-colors" href="/#trabajos">Productos</a>
+        <a class="text-sm font-medium hover:text-primary transition-colors" href="/#carga-diseno">Diseña tu prenda</a>
+        <a class="text-sm font-medium hover:text-primary transition-colors" href="/#contacto">Contacto</a>
       </nav>
 
       <!-- Carrito y menú hamburguesa -->
