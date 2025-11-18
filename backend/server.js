@@ -10,8 +10,42 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
+// Middleware CORS configurado para producción
+app.use(cors({
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (como mobile apps o curl)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'https://pigmaprint-frontend.vercel.app',
+      'https://pigmaprint-frontend.vercel.app/',
+      'http://localhost:3000',
+      'http://localhost:8080',
+      'http://localhost:5173', // Vite dev server
+      'https://pigmaprint-frontend-git-main-marlen-romeros-projects.vercel.app',
+      'https://pigmaprint-frontend-marlen-romeros-projects.vercel.app'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      // También permitir cualquier subdominio de vercel
+      if (origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        console.log('🚫 CORS bloqueado para origen:', origin);
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
+
+// Manejar preflight requests
+app.options('*', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -555,7 +589,6 @@ app.post('/api/send-order', upload.array('files'), async (req, res) => {
   }
 });
 
-// Las demás rutas permanecen igual...
 // Ruta para obtener archivos específicos de un pedido
 app.get('/api/pedidos/:id/archivos', async (req, res) => {
   try {
@@ -825,43 +858,41 @@ app.get('/', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log('='.repeat(60));
-  console.log('🚀 PIGMAPRINT - SISTEMA CON TELEGRAM (MEJORADO)');
-  console.log('='.repeat(60));
-  console.log(`📍 Servidor: http://localhost:${PORT}`);
-  
-  const hasToken = !!process.env.TELEGRAM_BOT_TOKEN;
-  const hasChatId = !!process.env.TELEGRAM_CHAT_ID;
-  
-  if (hasToken && hasChatId) {
-    console.log('🤖 Telegram: CONFIGURADO ✓');
-    console.log('📸 Imágenes: Envío como fotos activado');
-    console.log('📎 Otros archivos: Envío como documentos activado');
-    console.log('🔇 Captions: Desactivados (sin texto en archivos)');
-    console.log('🗑️  Limpieza: Automática después del envío exitoso');
-  } else {
-    console.log('🔧 Modo: Solo respaldo local');
-    console.log('⚙️  Configura TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID en .env');
-  }
-  
-  // Verificar y crear directorio de pedidos
-  const pedidosDir = path.join(__dirname, 'pedidos');
-  if (!require('fs').existsSync(pedidosDir)) {
-    require('fs').mkdirSync(pedidosDir, { recursive: true });
-    console.log('📁 Directorio "pedidos" creado');
-  }
-  
-  console.log('='.repeat(60));
-  console.log('📋 Endpoints disponibles:');
-  console.log(`   📍 Health: http://localhost:${PORT}/api/health`);
-  console.log(`   📨 Send: http://localhost:${PORT}/api/send-order (POST)`);
-  console.log(`   🧪 Test: http://localhost:${PORT}/api/test-telegram (POST)`);
-  console.log(`   📂 Orders: http://localhost:${PORT}/api/pedidos (GET)`);
-  console.log(`   📋 Order Detail: http://localhost:${PORT}/api/pedidos/:id (GET)`);
-  console.log(`   📁 Order Files: http://localhost:${PORT}/api/pedidos/:id/archivos (GET)`);
-  console.log(`   ⬇️  Download: http://localhost:${PORT}/api/pedidos/:id/archivo/:nombre (GET)`);
-  console.log(`   🖼️  View Image: http://localhost:${PORT}/api/pedidos/:id/imagen/:nombre (GET)`);
-  console.log(`   ⚙️  Config: http://localhost:${PORT}/api/config (GET)`);
-  console.log('='.repeat(60));
-});
+// Configuración para Vercel
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log('='.repeat(60));
+    console.log('🚀 PIGMAPRINT - SISTEMA CON TELEGRAM (MEJORADO)');
+    console.log('='.repeat(60));
+    console.log(`📍 Servidor: http://localhost:${PORT}`);
+    
+    const hasToken = !!process.env.TELEGRAM_BOT_TOKEN;
+    const hasChatId = !!process.env.TELEGRAM_CHAT_ID;
+    
+    if (hasToken && hasChatId) {
+      console.log('🤖 Telegram: CONFIGURADO ✓');
+      console.log('📸 Imágenes: Envío como fotos activado');
+      console.log('📎 Otros archivos: Envío como documentos activado');
+      console.log('🔇 Captions: Desactivados (sin texto en archivos)');
+      console.log('🗑️  Limpieza: Automática después del envío exitoso');
+    } else {
+      console.log('🔧 Modo: Solo respaldo local');
+      console.log('⚙️  Configura TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID en .env');
+    }
+    
+    console.log('='.repeat(60));
+    console.log('📋 Endpoints disponibles:');
+    console.log(`   📍 Health: http://localhost:${PORT}/api/health`);
+    console.log(`   📨 Send: http://localhost:${PORT}/api/send-order (POST)`);
+    console.log(`   🧪 Test: http://localhost:${PORT}/api/test-telegram (POST)`);
+    console.log(`   📂 Orders: http://localhost:${PORT}/api/pedidos (GET)`);
+    console.log(`   📋 Order Detail: http://localhost:${PORT}/api/pedidos/:id (GET)`);
+    console.log(`   📁 Order Files: http://localhost:${PORT}/api/pedidos/:id/archivos (GET)`);
+    console.log(`   ⬇️  Download: http://localhost:${PORT}/api/pedidos/:id/archivo/:nombre (GET)`);
+    console.log(`   🖼️  View Image: http://localhost:${PORT}/api/pedidos/:id/imagen/:nombre (GET)`);
+    console.log(`   ⚙️  Config: http://localhost:${PORT}/api/config (GET)`);
+    console.log('='.repeat(60));
+  });
+}
+
+module.exports = app;

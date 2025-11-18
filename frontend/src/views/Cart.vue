@@ -405,7 +405,7 @@
                   type="tel"
                   :disabled="sendingEmail"
                   class="w-full rounded-lg p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  placeholder="Ej: +34 612 345 678"
+                  placeholder="Ej: 9999-9999"
                   required
                 >
               </div>
@@ -544,7 +544,7 @@ export default {
         phone: '',
         email: ''
       },
-      backendUrl: 'http://localhost:3001'
+      backendUrl: 'https://pigmaprint-backend.vercel.app'
     }
   },
   computed: {
