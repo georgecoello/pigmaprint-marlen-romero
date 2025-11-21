@@ -4,7 +4,7 @@
     <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div class="max-w-6xl mx-auto">
         <!-- Texto de bienvenida -->
-        <section id="inicio" class="mb-12 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 transform transition-all duration-300 hover:shadow-xl">
+        <section id="inicio" class="mb-12 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 transform transition-all duration-300 hover:shadow-xl scroll-mt-24">
           <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
             ¡Bienvenido a Pigmaprint!
           </h1>
@@ -34,9 +34,9 @@
         </section>
         
         <!-- Carrusel Infinito de Trabajos Realizados -->
-        <section id="trabajos" class="mt-16">
+        <section id="trabajos" class="mt-16 scroll-mt-24">
           <div class="text-center mb-10">
-            <h3 class="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+            <h3 class="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent scroll-mt-24">
               Nuestros Trabajos Realizados
             </h3>
             <p class="mt-2 text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
@@ -95,9 +95,9 @@
         </section>
 
         <!-- Carga tu Diseño mejorado con selector de producto -->
-        <section class="mt-16">
+        <section id="carga-diseno" class="mt-16 scroll-mt-24">
           <div class="text-center bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
-            <h2 id="carga-diseno" class="text-4xl font-black tracking-tight bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">Carga tu Diseño</h2>
+            <h2 class="text-4xl font-black tracking-tight bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">Carga tu Diseño</h2>
             <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">¿Tienes un diseño o necesitas ayuda para crear uno? Nosotros te ayudamos.</p>
           </div>
 
@@ -196,17 +196,17 @@
                   type="file"
                   class="hidden"
                   @change="handleFileUpload"
-                  accept=".png, .jpg, .jpeg, .svg, .pdf, .ai, .eps, .psd"
+                  accept=".png, .jpg, .jpeg, .svg, .gif, .webp, image/*"
                 />
                 
                 <div v-if="!uploadedFile" class="text-center">
                   <div class="text-6xl text-purple-400 mb-4">
                     <span class="material-symbols-outlined">cloud_upload</span>
                   </div>
-                  <p class="text-lg text-gray-600 dark:text-gray-400 font-medium">Haz clic para seleccionar un archivo</p>
-                  <p class="mt-2 text-sm text-gray-500 dark:text-gray-500">o arrástralo aquí</p>
+                  <p class="text-lg text-gray-600 dark:text-gray-400 font-medium">Haz clic para seleccionar una imagen</p>
+                  <p class="mt-2 text-sm text-gray-500 dark:text-gray-500">o arrástrala aquí</p>
                   <p class="text-xs text-gray-400 dark:text-gray-500 mt-4">
-                    Formatos: PNG, JPG, SVG, PDF, AI, EPS, PSD • Máx. 10MB
+                    Formatos: PNG, JPG, JPEG, SVG, GIF, WEBP • Máx. 10MB
                   </p>
                 </div>
 
@@ -214,7 +214,7 @@
                   <div class="text-5xl text-green-500 mb-3">
                     <span class="material-symbols-outlined">check_circle</span>
                   </div>
-                  <p class="text-lg text-gray-700 dark:text-gray-300 font-medium">¡Archivo listo!</p>
+                  <p class="text-lg text-gray-700 dark:text-gray-300 font-medium">¡Imagen lista!</p>
                   <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ uploadedFile.name }}</p>
                   <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">
                     Tamaño: {{ formatFileSize(uploadedFile.size) }} • Tipo: {{ uploadedFile.type || 'No especificado' }}
@@ -223,7 +223,7 @@
                     @click.stop="triggerMainFileInput"
                     class="mt-3 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 text-sm font-medium transition-colors"
                   >
-                    Cambiar archivo
+                    Cambiar imagen
                   </button>
                 </div>
               </div>
@@ -269,7 +269,7 @@
         </section>
 
         <!-- Sección de Contacto Rediseñada -->
-        <section id="contacto" class="mt-16 pb-12">
+        <section id="contacto" class="mt-16 pb-12 scroll-mt-24">
           <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
             <h3 class="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-6 text-center">
               Contacto
@@ -433,6 +433,12 @@
           <!-- Contenido -->
           <div class="p-8">
             <div class="text-center mb-6">
+              <!-- Código del producto -->
+              <div class="bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl p-4 mb-4 inline-block">
+                <p class="text-sm font-medium">Código del Producto</p>
+                <p class="text-xl font-bold tracking-wider">{{ lastAddedProductCode }}</p>
+              </div>
+              
               <p class="text-gray-600 dark:text-gray-300 mb-4">
                 <strong>{{ getProductTypeLabel(lastAddedProduct) }}</strong> 
                 {{ hasDesign === false ? 
@@ -446,7 +452,7 @@
               </p>
               <p v-if="hasDesign && uploadedFile" class="text-sm text-green-600 dark:text-green-400 mt-2">
                 <span class="material-symbols-outlined align-middle text-sm">check_circle</span>
-                Archivo guardado correctamente
+                Imagen asociada correctamente
               </p>
             </div>
 
@@ -499,6 +505,7 @@ export default {
       // Modal
       showAddMoreModal: false,
       lastAddedProduct: '',
+      lastAddedProductCode: '',
       
       // Formulario de diseño
       uploadedFile: null,
@@ -508,6 +515,7 @@ export default {
       designProductType: '',
       designNotes: '',
       hasDesign: null, // null = no seleccionado, true = tiene diseño, false = necesita ayuda
+      productCounter: 0,
       
       // Trabajos del carrusel - TODAS LAS IMÁGENES INCLUIDAS
       worksData: [
@@ -711,6 +719,14 @@ export default {
     }
   },
   methods: {
+    // Generar código único para productos
+    generateProductCode() {
+      const timestamp = Date.now().toString(36);
+      const random = Math.random().toString(36).substr(2, 5);
+      this.productCounter++;
+      return `PIGMA-${timestamp}-${random}-${this.productCounter.toString().padStart(3, '0')}`.toUpperCase();
+    },
+
     // Animación del carrusel
     animateCarousel() {
       if (this.isCarouselPaused) return;
@@ -774,22 +790,33 @@ export default {
       const file = event.target.files[0];
       if (!file) return;
       
-      const allowedTypes = ['.png', '.jpg', '.jpeg', '.svg', '.pdf', '.ai', '.eps', '.psd'];
-      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+      // Solo permitir tipos de imagen
+      const allowedTypes = [
+        'image/png', 
+        'image/jpeg', 
+        'image/jpg', 
+        'image/svg+xml', 
+        'image/gif', 
+        'image/webp'
+      ];
       
-      if (!allowedTypes.includes(fileExtension)) {
-        alert('Por favor selecciona un archivo PNG, JPG, SVG, PDF, AI, EPS o PSD.');
+      if (!allowedTypes.includes(file.type)) {
+        alert('❌ Por favor selecciona solo archivos de imagen.\n\nFormatos permitidos: PNG, JPG, JPEG, SVG, GIF, WEBP');
+        // Limpiar el input
+        event.target.value = '';
         return;
       }
       
       if (file.size > 10 * 1024 * 1024) {
-        alert('El archivo es demasiado grande. Máximo 10MB permitido.');
+        alert('❌ La imagen es demasiado grande.\n\nMáximo 10MB permitido.');
+        // Limpiar el input
+        event.target.value = '';
         return;
       }
       
       this.uploadedFile = file;
       this.designFile = file;
-      console.log('📄 Archivo seleccionado:', file.name, 'Tamaño:', this.formatFileSize(file.size));
+      console.log('📸 Imagen seleccionada:', file.name, 'Tipo:', file.type, 'Tamaño:', this.formatFileSize(file.size));
     },
 
     // Formatear tamaño de archivo
@@ -818,6 +845,10 @@ export default {
         return;
       }
       
+      // Generar código único para este producto
+      const productCode = this.generateProductCode();
+      this.lastAddedProductCode = productCode; // Guardar para mostrar en el modal
+      
       // Agregar al carrito o lista de asesorías
       this.cartCount += 1;
       this.lastAddedProduct = this.designProductType;
@@ -833,12 +864,13 @@ export default {
             type: this.uploadedFile.type,
             size: this.uploadedFile.size,
             data: base64Data, // Guardamos el archivo como Base64
-            lastModified: this.uploadedFile.lastModified
+            lastModified: this.uploadedFile.lastModified,
+            productCode: productCode // Asociar el archivo con el código del producto
           };
-          console.log('✅ Archivo convertido a Base64:', this.uploadedFile.name);
+          console.log('✅ Imagen convertida a Base64:', this.uploadedFile.name, 'Código:', productCode);
         } catch (error) {
-          console.error('❌ Error convirtiendo archivo a Base64:', error);
-          alert('Error al procesar el archivo. Intenta nuevamente.');
+          console.error('❌ Error convirtiendo imagen a Base64:', error);
+          alert('Error al procesar la imagen. Intenta nuevamente.');
           return;
         }
       }
@@ -846,6 +878,7 @@ export default {
       // Crear item del carrito o solicitud de asesoría
       const cartItem = {
         id: Date.now(),
+        productCode: productCode, // Código único del producto
         productType: this.designProductType,
         productName: this.getProductTypeLabel(this.designProductType),
         hasDesign: this.hasDesign,
@@ -863,6 +896,7 @@ export default {
       localStorage.setItem('pigmaprint_cart', JSON.stringify(currentCart));
       
       console.log('🛒 Producto agregado al carrito:', {
+        código: productCode,
         producto: cartItem.productName,
         conDiseño: cartItem.hasDesign,
         archivo: cartItem.fileName,
@@ -942,16 +976,29 @@ export default {
   transition: all 0.3s ease;
 }
 
+/* Scroll margin para compensar el header fijo */
+.scroll-mt-24 {
+  scroll-margin-top: 6rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .carousel-slide {
     width: 18rem;
+  }
+  
+  .scroll-mt-24 {
+    scroll-margin-top: 6rem;
   }
 }
 
 @media (max-width: 640px) {
   .carousel-slide {
     width: 16rem;
+  }
+  
+  .scroll-mt-24 {
+    scroll-margin-top: 4.5rem;
   }
 }
 </style>

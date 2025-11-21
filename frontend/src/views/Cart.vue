@@ -65,6 +65,13 @@
                 <div class="flex-grow">
                   <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
                     <div class="flex-grow">
+                      <!-- Código del producto -->
+                      <div class="flex items-center mb-2">
+                        <span class="text-xs bg-gradient-to-r from-purple-500 to-blue-500 text-white px-3 py-1 rounded-full font-mono font-bold tracking-wide">
+                          {{ item.productCode }}
+                        </span>
+                      </div>
+
                       <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">
                         {{ item.productName }}
                       </h3>
@@ -165,6 +172,9 @@
                         {{ esImagen(item.fileData.type) ? 'image' : 'description' }}
                       </span>
                       {{ esImagen(item.fileData.type) ? 'Imagen lista' : 'Documento listo' }}
+                      <span class="ml-1 text-purple-500 font-mono text-xs">
+                        ({{ item.productCode }})
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -192,6 +202,13 @@
                   <span class="text-gray-600 dark:text-gray-300">Archivos:</span>
                   <span class="font-semibold text-gray-800 dark:text-white">
                     {{ totalFiles }}
+                  </span>
+                </div>
+
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 dark:text-gray-300">Códigos únicos:</span>
+                  <span class="font-semibold text-gray-800 dark:text-white">
+                    {{ cartItems.length }}
                   </span>
                 </div>
 
@@ -244,8 +261,8 @@
                 
                 <button 
                   @click="clearCart"
-                  :disabled="sendingEmail"
-                  class="w-full px-6 py-4 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors duration-200 flex items-center justify-center"
+                  :disabled="sendingEmail || cartItems.length === 0"
+                  class="w-full px-6 py-4 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span class="material-symbols-outlined mr-2">delete_sweep</span>
                   Vaciar Carrito
@@ -263,8 +280,11 @@
                     <p class="text-sm text-blue-700 dark:text-blue-300 mb-2">
                       <strong>Archivos listos:</strong> {{ totalFiles }}
                     </p>
+                    <p class="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                      <strong>Códigos únicos:</strong> {{ cartItems.length }}
+                    </p>
                     <p class="text-xs text-blue-600 dark:text-blue-400">
-                      Los archivos se enviarán automáticamente con tu pedido.
+                      Cada producto tiene un código único para mejor seguimiento.
                     </p>
                   </div>
                 </div>
@@ -307,7 +327,7 @@
                 ¿Estás seguro de que quieres vaciar el carrito?
               </p>
               <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                Se eliminarán <strong class="text-red-500">{{ totalItems }} productos</strong> y <strong class="text-red-500">{{ totalFiles }} archivos</strong> de tu carrito actual. 
+                Se eliminarán <strong class="text-red-500">{{ totalItems }} productos</strong>, <strong class="text-red-500">{{ totalFiles }} archivos</strong> y <strong class="text-red-500">{{ cartItems.length }} códigos únicos</strong> de tu carrito actual. 
                 Esta acción no se puede deshacer.
               </p>
             </div>
@@ -322,7 +342,7 @@
                   {{ totalItems }}
                 </span>
               </div>
-              <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center justify-between text-sm mb-2">
                 <span class="text-red-700 dark:text-red-300 font-medium">
                   Archivos a eliminar:
                 </span>
@@ -330,9 +350,17 @@
                   {{ totalFiles }}
                 </span>
               </div>
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-red-700 dark:text-red-300 font-medium">
+                  Códigos únicos:
+                </span>
+                <span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                  {{ cartItems.length }}
+                </span>
+              </div>
               <div class="mt-2 text-xs text-red-600 dark:text-red-400">
                 <span class="material-symbols-outlined align-middle text-sm mr-1">info</span>
-                Incluye todos los diseños y personalizaciones
+                Incluye todos los diseños, personalizaciones y códigos únicos
               </div>
             </div>
 
@@ -430,7 +458,7 @@
                 Resumen de tu pedido:
               </p>
               <p class="text-xs text-gray-600 dark:text-gray-400">
-                {{ totalItems }} productos • {{ totalFiles }} archivos
+                {{ totalItems }} productos • {{ totalFiles }} archivos • {{ cartItems.length }} códigos
               </p>
             </div>
 
@@ -490,7 +518,7 @@
             
             <!-- Mensaje -->
             <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-              Tu pedido de <strong>{{ totalItems }} productos</strong> y <strong>{{ totalFiles }} archivos</strong> ha sido enviado correctamente a nuestro equipo. 
+              Tu pedido de <strong>{{ totalItems }} productos</strong>, <strong>{{ totalFiles }} archivos</strong> y <strong>{{ cartItems.length }} códigos únicos</strong> ha sido enviado correctamente a nuestro equipo. 
               <span class="block mt-2 text-green-600 dark:text-green-400 font-semibold">
                 Te contactaremos pronto para confirmar los detalles y el precio.
               </span>
@@ -502,20 +530,107 @@
                 <span class="text-gray-500 dark:text-gray-400">Productos totales:</span>
                 <span class="font-semibold text-gray-700 dark:text-gray-300">{{ totalItems }}</span>
               </div>
-              <div class="flex justify-between items-center text-sm">
+              <div class="flex justify-between items-center text-sm mb-2">
                 <span class="text-gray-500 dark:text-gray-400">Archivos enviados:</span>
                 <span class="font-semibold text-gray-700 dark:text-gray-300">{{ totalFiles }}</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-500 dark:text-gray-400">Códigos únicos:</span>
+                <span class="font-semibold text-gray-700 dark:text-gray-300">{{ cartItems.length }}</span>
               </div>
             </div>
 
             <!-- Botón de cierre -->
             <button 
-              @click="showSuccessModal = false"
+              @click="handleSuccessModalClose"
               class="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-green-600 hover:to-blue-700 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center"
             >
               <span class="material-symbols-outlined mr-2">done_all</span>
               Entendido
             </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Modal de Confirmación para Vaciar Carrito después del Envío -->
+    <transition name="modal-fade">
+      <div 
+        v-if="showClearCartAfterSuccess" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-all duration-300"
+      >
+        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-auto transform transition-all duration-500 scale-95 hover:scale-100 overflow-hidden">
+          <!-- Fondo decorativo -->
+          <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-500 to-blue-500"></div>
+          
+          <!-- Contenido -->
+          <div class="p-8 text-center">
+            <!-- Ícono animado -->
+            <div class="w-20 h-20 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg transform transition-all duration-500 hover:scale-110">
+              <span class="material-symbols-outlined text-3xl text-white">
+                shopping_cart_checkout
+              </span>
+            </div>
+            
+            <!-- Título -->
+            <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+              ¿Vaciar Carrito?
+            </h3>
+            
+            <!-- Mensaje -->
+            <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+              Tu pedido ha sido enviado exitosamente. 
+              <span class="block mt-2 font-semibold">
+                ¿Deseas vaciar el carrito o mantener los productos para un próximo pedido?
+              </span>
+            </p>
+
+            <!-- Resumen del carrito -->
+            <div class="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-4 mb-6">
+              <div class="flex justify-between items-center text-sm mb-2">
+                <span class="text-purple-700 dark:text-purple-300 font-medium">
+                  Productos en carrito:
+                </span>
+                <span class="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                  {{ totalItems }}
+                </span>
+              </div>
+              <div class="flex justify-between items-center text-sm mb-2">
+                <span class="text-purple-700 dark:text-purple-300 font-medium">
+                  Archivos en carrito:
+                </span>
+                <span class="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                  {{ totalFiles }}
+                </span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-purple-700 dark:text-purple-300 font-medium">
+                  Códigos únicos:
+                </span>
+                <span class="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                  {{ cartItems.length }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="flex gap-3">
+              <button 
+                @click="keepCartItems"
+                class="flex-1 px-6 py-3 border-2 border-purple-500 text-purple-600 dark:text-purple-400 rounded-xl font-semibold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all duration-300 transform hover:scale-105 flex items-center justify-center group"
+              >
+                <span class="material-symbols-outlined mr-2 text-lg group-hover:animate-pulse">inventory_2</span>
+                Mantener
+              </button>
+              
+              <button 
+                @click="clearCartAfterSuccess"
+                class="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-purple-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 flex items-center justify-center group"
+              >
+                <span class="material-symbols-outlined mr-2 text-lg group-hover:animate-bounce">delete_sweep</span>
+                Vaciar
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -538,6 +653,7 @@ export default {
       showContactModal: false,
       showSuccessModal: false,
       showClearCartModal: false,
+      showClearCartAfterSuccess: false,
       sendingEmail: false,
       customerInfo: {
         name: '',
@@ -592,6 +708,7 @@ export default {
           this.cartCount = this.cartItems.length
           console.log('🛒 Carrito cargado:', this.cartItems.length, 'productos')
           console.log('📁 Archivos en carrito:', this.totalFiles)
+          console.log('🔢 Códigos únicos:', this.cartItems.map(item => item.productCode))
         } catch (error) {
           console.error('Error loading cart:', error)
           this.cartItems = []
@@ -674,6 +791,10 @@ export default {
     },
     
     clearCart() {
+      if (this.cartItems.length === 0) {
+        console.log('El carrito ya está vacío')
+        return
+      }
       this.showClearCartModal = true
     },
 
@@ -683,11 +804,36 @@ export default {
       this.cartCount = 0
       this.showClearCartModal = false
     },
+
+    // MÉTODOS PARA MANEJAR LA MODAL DESPUÉS DEL ÉXITO
+    handleSuccessModalClose() {
+      this.showSuccessModal = false
+      // Mostrar modal para preguntar si quiere vaciar el carrito
+      setTimeout(() => {
+        this.showClearCartAfterSuccess = true
+      }, 300)
+    },
+
+    keepCartItems() {
+      // Simplemente cerrar la modal, el carrito se mantiene
+      this.showClearCartAfterSuccess = false
+      console.log('✅ Carrito mantenido con', this.totalItems, 'productos y', this.cartItems.length, 'códigos únicos')
+    },
+
+    clearCartAfterSuccess() {
+      // Vaciar el carrito después del éxito
+      this.cartItems = []
+      this.saveCart()
+      this.cartCount = 0
+      this.showClearCartAfterSuccess = false
+      console.log('🗑️ Carrito vaciado después del envío exitoso')
+    },
     
     async saveCart() {
       try {
         const cartToSave = this.cartItems.map(item => ({
           id: item.id,
+          productCode: item.productCode,
           productType: item.productType,
           productName: item.productName,
           fileName: item.fileName,
@@ -726,7 +872,8 @@ export default {
         console.log('📤 Enviando pedido al backend...', {
           customer: emailData.customerName,
           productos: this.totalItems,
-          archivos: emailData.files.length
+          archivos: emailData.files.length,
+          codigos: this.cartItems.length
         })
 
         // Enviar al backend
@@ -736,10 +883,12 @@ export default {
         this.showSuccessModal = true
         this.showContactModal = false
         
-        // Limpiar carrito después del envío exitoso
-        setTimeout(() => {
-          this.confirmClearCart()
-        }, 2000)
+        // Limpiar información del cliente
+        this.customerInfo = {
+          name: '',
+          phone: '',
+          email: ''
+        }
         
       } catch (error) {
         console.error('❌ Error enviando pedido:', error)
@@ -749,7 +898,7 @@ export default {
       }
     },
 
-    // CREAR DETALLES DEL PEDIDO - CON CANTIDADES
+    // CREAR DETALLES DEL PEDIDO - CON CÓDIGOS
     createOrderDetails() {
       const currentDate = new Date().toLocaleDateString('es-ES', {
         weekday: 'long',
@@ -772,7 +921,8 @@ export default {
       // Resumen del pedido
       details += `📦 RESUMEN DEL PEDIDO\n`
       details += `• Total de productos: ${this.totalItems}\n`
-      details += `• Archivos adjuntos: ${this.totalFiles}\n\n`
+      details += `• Archivos adjuntos: ${this.totalFiles}\n`
+      details += `• Códigos únicos: ${this.cartItems.length}\n\n`
 
       // Detalles de productos
       details += `🎨 DETALLES DE PRODUCTOS\n\n`
@@ -780,6 +930,7 @@ export default {
       this.cartItems.forEach((item, index) => {
         const quantity = item.quantity || 1
         details += `PRODUCTO ${index + 1}:\n`
+        details += `• Código: ${item.productCode}\n`
         details += `• Tipo: ${this.getProductTypeLabel(item.productType)}\n`
         details += `• Nombre: ${item.productName}\n`
         details += `• Cantidad: ${quantity} ${quantity === 1 ? 'unidad' : 'unidades'}\n`
@@ -801,31 +952,43 @@ export default {
 
       details += `---\n`
       details += `Este pedido fue generado automáticamente desde la web de Pigmaprint\n`
+      details += `Cada producto tiene un código único para seguimiento\n`
 
       return details
     },
 
-    // OBTENER ARCHIVOS DESDE EL CARRITO
+    // OBTENER ARCHIVOS DESDE EL CARRITO - CON CÓDIGOS
     async getFilesFromCart() {
       const files = []
       
       for (const item of this.cartItems) {
         if (item.hasDesign && item.fileData && item.fileData.data) {
           try {
-            const file = await this.base64ToFile(
+            const originalFile = await this.base64ToFile(
               item.fileData.data,
               item.fileData.name,
               item.fileData.type
             )
-            files.push(file)
-            console.log(`✅ Archivo preparado: ${item.fileData.name}`)
+            
+            // Renombrar el archivo con el código del producto
+            const fileExtension = originalFile.name.split('.').pop();
+            const newFileName = `${item.productCode}_${item.fileData.name.split('.')[0]}.${fileExtension}`;
+            
+            const renamedFile = new File(
+              [originalFile], 
+              newFileName, 
+              { type: originalFile.type, lastModified: Date.now() }
+            );
+            
+            files.push(renamedFile);
+            console.log(`✅ Archivo preparado: ${item.fileData.name} → ${newFileName}`);
           } catch (error) {
-            console.error(`❌ Error convirtiendo archivo ${item.fileData?.name}:`, error)
+            console.error(`❌ Error convirtiendo archivo ${item.fileData?.name}:`, error);
           }
         }
       }
       
-      return files
+      return files;
     },
 
     // CONVERTIR BASE64 A FILE
@@ -887,7 +1050,7 @@ export default {
           })
         }
 
-        console.log(`📦 Enviando pedido con ${emailData.files.length} archivos...`)
+        console.log(`📦 Enviando pedido con ${emailData.files.length} archivos y ${this.cartItems.length} códigos únicos...`)
 
         // Enviar al backend
         const response = await fetch(`${this.backendUrl}/api/send-order`, {

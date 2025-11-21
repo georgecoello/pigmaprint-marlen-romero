@@ -61,6 +61,34 @@ function esImagen(mimetype) {
   return mimetype.startsWith('image/');
 }
 
+// ✅ FUNCIÓN: Extraer código del producto desde el nombre del archivo
+function extraerCodigoProductoDesdeNombre(nombreArchivo) {
+  if (!nombreArchivo) return null;
+  
+  // Buscar patrones de código como PIGMA-XXXXX
+  const patrones = [
+    /(PIGMA-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+)/i, // PIGMA-timestamp-random-counter
+    /(PIGMA-\w+-\w+-\d+)/i, // Formato general
+  ];
+  
+  for (const patron of patrones) {
+    const match = nombreArchivo.match(patron);
+    if (match && match[1]) {
+      return `🆔 Código: ${match[1].toUpperCase()}`;
+    }
+  }
+  
+  // Si no encuentra patrón específico, intentar extraer la primera parte antes del _
+  if (nombreArchivo.includes('_')) {
+    const primeraParte = nombreArchivo.split('_')[0];
+    if (primeraParte && primeraParte.length > 3) {
+      return `📦 ${primeraParte}`;
+    }
+  }
+  
+  return null;
+}
+
 // Función para eliminar carpeta de pedido recursivamente
 async function eliminarCarpetaPedido(carpetaPath) {
   try {
@@ -173,7 +201,7 @@ function mapearArchivosAProductos(files, productosInfo) {
   return archivosMapeados;
 }
 
-// Función mejorada para enviar a Telegram SIN nombres de archivos ni productos Y ELIMINAR CARPETA DESPUÉS
+// Función mejorada para enviar a Telegram CON códigos de producto en captions
 async function enviarTelegram(pedidoInfo, archivosMapeados) {
   const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
   const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -212,12 +240,12 @@ async function enviarTelegram(pedidoInfo, archivosMapeados) {
 
 📦 *Total Productos:* ${pedidoInfo.totalProductos || 'No especificado'}
 📸 *Imágenes:* ${imagenes.length}
-📎 *Otros archivos:* ${otrosArchivos.length}
-🕒 *Fecha:* ${pedidoInfo.timestamp}
 
 📍 *ID Pedido:* ${pedidoInfo.id}
 
 ${mensajeProductos}
+
+📝 *Nota:* Cada imagen incluye el código del producto correspondiente
     `.trim();
 
     // Enviar mensaje principal
@@ -229,7 +257,7 @@ ${mensajeProductos}
 
     console.log('✅ Mensaje de Telegram enviado');
 
-    // 2. Enviar imágenes como fotos (SIN caption)
+    // 2. Enviar imágenes como fotos CON CAPTION (código del producto)
     const imagenesEnviadas = [];
     for (let i = 0; i < Math.min(imagenes.length, 10); i++) {
       const imagen = imagenes[i];
@@ -242,6 +270,13 @@ ${mensajeProductos}
           contentType: imagen.mimetype
         });
         
+        // ✅ AGREGAR CAPTION CON CÓDIGO DEL PRODUCTO
+        const caption = extraerCodigoProductoDesdeNombre(imagen.originalname);
+        if (caption) {
+          formData.append('caption', caption);
+          console.log(`📝 Caption agregado: ${caption}`);
+        }
+        
         await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, formData, {
           headers: {
             ...formData.getHeaders(),
@@ -249,9 +284,10 @@ ${mensajeProductos}
         });
 
         imagenesEnviadas.push({
-          nombre: imagen.originalname
+          nombre: imagen.originalname,
+          caption: caption || 'Sin código'
         });
-        console.log(`✅ Imagen ${i + 1} enviada sin caption`);
+        console.log(`✅ Imagen ${i + 1} enviada con caption: ${caption || 'Sin código'}`);
         
         // Pequeña pausa para no saturar la API
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -272,7 +308,7 @@ ${mensajeProductos}
               ...formData.getHeaders(),
             },
           });
-          console.log(`✅ Imagen enviada como archivo sin caption`);
+          console.log(`✅ Imagen enviada como archivo`);
         } catch (docError) {
           console.log(`❌ Error enviando imagen como archivo:`, docError.message);
         }
@@ -301,7 +337,7 @@ ${mensajeProductos}
         otrosEnviados.push({
           nombre: archivo.originalname
         });
-        console.log(`✅ Archivo ${i + 1} enviado sin caption`);
+        console.log(`✅ Archivo ${i + 1} enviado`);
         
         // Pequeña pausa para no saturar la API
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -311,7 +347,7 @@ ${mensajeProductos}
       }
     }
 
-    // ✅ NUEVO: ELIMINAR CARPETA DEL PEDIDO DESPUÉS DE ENVIAR A TELEGRAM
+    // ✅ ELIMINAR CARPETA DEL PEDIDO DESPUÉS DE ENVIAR A TELEGRAM
     const pedidoDir = path.join(__dirname, 'pedidos', pedidoInfo.id);
     try {
       await eliminarCarpetaPedido(pedidoDir);
@@ -329,7 +365,8 @@ ${mensajeProductos}
         imagenes: imagenesEnviadas,
         otros: otrosEnviados
       },
-      carpetaEliminada: true // ✅ Indicar que se eliminó la carpeta
+      carpetaEliminada: true,
+      captionsHabilitados: true // ✅ Indicar que los captions están activados
     };
 
   } catch (error) {
@@ -370,7 +407,8 @@ async function guardarRespaldoLocal(pedidoInfo, files, archivosMapeados) {
           size: img.size, 
           type: img.mimetype,
           path: `archivos/${img.originalname}`,
-          sizeMB: (img.size / 1024 / 1024).toFixed(2)
+          sizeMB: (img.size / 1024 / 1024).toFixed(2),
+          codigoProducto: extraerCodigoProductoDesdeNombre(img.originalname) // ✅ Agregar código del producto
         })),
         otrosArchivos: otrosArchivos.map(archivo => ({ 
           name: archivo.originalname, 
@@ -418,7 +456,10 @@ ${pedidoInfo.productosInfo.productos.map((p, i) =>
 LISTA DE ARCHIVOS:
 
 IMÁGENES (${imagenes.length}):
-${imagenes.map((f, i) => `  ${i + 1}. ${f.originalname} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join('\n')}
+${imagenes.map((f, i) => {
+  const codigo = extraerCodigoProductoDesdeNombre(f.originalname);
+  return `  ${i + 1}. ${f.originalname} (${(f.size / 1024 / 1024).toFixed(2)} MB)${codigo ? ` - ${codigo}` : ''}`;
+}).join('\n')}
 
 OTROS ARCHIVOS (${otrosArchivos.length}):
 ${otrosArchivos.map((f, i) => `  ${i + 1}. ${f.originalname} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join('\n')}
@@ -442,7 +483,10 @@ ESTRUCTURA DE CARPETAS:
 ├── 📄 informacion.json
 ├── 📄 RESUMEN.txt
 └── 📁 archivos/
-${files.map(file => `    └── ${file.originalname} (${(file.size / 1024 / 1024).toFixed(2)} MB)`).join('\n')}
+${files.map(file => {
+  const codigo = extraerCodigoProductoDesdeNombre(file.originalname);
+  return `    └── ${file.originalname} (${(file.size / 1024 / 1024).toFixed(2)} MB)${codigo ? ` - ${codigo}` : ''}`;
+}).join('\n')}
     `.trim();
     
     await fs.writeFile(path.join(pedidoDir, 'ESTRUCTURA.txt'), estructura);
@@ -540,10 +584,11 @@ app.post('/api/send-order', upload.array('files'), async (req, res) => {
       console.log('✅ Pedido procesado exitosamente y carpeta eliminada');
       console.log(`📸 Imágenes enviadas: ${telegramResult.imagenesEnviadas}`);
       console.log(`📎 Otros archivos enviados: ${telegramResult.otrosEnviados}`);
+      console.log(`📝 Captions habilitados: ${telegramResult.captionsHabilitados}`);
       
       return res.json({
         success: true,
-        message: `✅ Pedido enviado por Telegram exitosamente (${telegramResult.imagenesEnviadas} imágenes, ${telegramResult.otrosEnviados} otros archivos) - Carpeta eliminada del servidor`,
+        message: `✅ Pedido enviado por Telegram exitosamente (${telegramResult.imagenesEnviadas} imágenes, ${telegramResult.otrosEnviados} otros archivos) - Códigos de producto incluidos en captions`,
         method: 'telegram',
         pedidoId: pedidoInfo.id,
         estadisticas: {
@@ -552,7 +597,8 @@ app.post('/api/send-order', upload.array('files'), async (req, res) => {
           totalArchivos: files.length,
           productos: productosInfo.productos.length
         },
-        carpetaEliminada: true // ✅ Indicar que se eliminó
+        carpetaEliminada: true,
+        captionsHabilitados: true // ✅ Indicar que los captions están activados
       });
     }
 
@@ -577,7 +623,7 @@ app.post('/api/send-order', upload.array('files'), async (req, res) => {
         totalArchivos: files.length,
         productos: productosInfo.productos.length
       },
-      carpetaEliminada: false // ✅ Indicar que NO se eliminó
+      carpetaEliminada: false
     });
 
   } catch (error) {
@@ -689,7 +735,7 @@ app.post('/api/test-telegram', async (req, res) => {
     // Test mejorado con información de archivos
     await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       chat_id: TELEGRAM_CHAT_ID,
-      text: '✅ Test de conexión - Pigmaprint Backend funcionando correctamente\n\n📸 *Soporte para imágenes:* Activado\n📎 *Soporte para otros archivos:* Activado\n🔄 *Envío sin captions:* Activado\n🗑️ *Limpieza automática:* Activada',
+      text: '✅ Test de conexión - Pigmaprint Backend funcionando correctamente\n\n📸 *Soporte para imágenes:* Activado\n📎 *Soporte para otros archivos:* Activado\n🔄 *Envío con captions:* ✅ ACTIVADO (códigos de producto)\n🗑️ *Limpieza automática:* Activada',
       parse_mode: 'Markdown'
     });
 
@@ -700,7 +746,7 @@ app.post('/api/test-telegram', async (req, res) => {
         imagenes: true,
         otrosArchivos: true,
         organizacion: true,
-        sinCaptions: true,
+        conCaptions: true, // ✅ Actualizado
         limpiezaAutomatica: true
       }
     });
@@ -730,10 +776,10 @@ app.get('/api/config', (req, res) => {
       otrosArchivos: true,
       organizacion: true,
       respaldoLocal: true,
-      sinCaptions: true,
+      conCaptions: true, // ✅ Actualizado
       limpiezaAutomatica: true
     },
-    mode: (hasToken && hasChatId) ? 'Telegram + Limpieza Automática' : 'Solo Local',
+    mode: (hasToken && hasChatId) ? 'Telegram + Captions + Limpieza Automática' : 'Solo Local',
     endpoints: {
       sendOrder: 'POST /api/send-order',
       testTelegram: 'POST /api/test-telegram',
@@ -829,7 +875,7 @@ app.get('/api/health', (req, res) => {
       imagenes: true,
       otrosArchivos: true,
       organizacion: true,
-      sinCaptions: true,
+      conCaptions: true, // ✅ Actualizado
       limpiezaAutomatica: true
     },
     storage: {
@@ -842,13 +888,14 @@ app.get('/api/health', (req, res) => {
 app.get('/', (req, res) => {
   res.json({ 
     message: '🚀 Pigmaprint Backend - Sistema con Telegram MEJORADO',
-    version: '2.5.0',
+    version: '2.6.0', // ✅ Versión actualizada
     status: 'Operativo',
     features: [
       '✅ Recepción de pedidos desde frontend Vue.js',
       '✅ Notificaciones instantáneas por Telegram',
-      '📸 Envío de imágenes como fotos (sin captions)',
+      '📸 Envío de imágenes como fotos CON CAPTIONS', // ✅ Actualizado
       '📎 Envío de otros archivos como documentos (sin captions)',
+      '🆔 Códigos de producto en captions de imágenes', // ✅ Nueva característica
       '📋 Información de productos en mensaje principal',
       '🗑️  Limpieza automática después del envío exitoso',
       '📁 Organización simplificada en carpeta única',
@@ -872,8 +919,8 @@ if (require.main === module) {
     if (hasToken && hasChatId) {
       console.log('🤖 Telegram: CONFIGURADO ✓');
       console.log('📸 Imágenes: Envío como fotos activado');
+      console.log('📝 Captions: ✅ ACTIVADOS (códigos de producto)'); // ✅ Actualizado
       console.log('📎 Otros archivos: Envío como documentos activado');
-      console.log('🔇 Captions: Desactivados (sin texto en archivos)');
       console.log('🗑️  Limpieza: Automática después del envío exitoso');
     } else {
       console.log('🔧 Modo: Solo respaldo local');

@@ -9,10 +9,10 @@
 
       <!-- Menú para desktop -->
       <nav class="hidden lg:flex items-center gap-6">
-        <a class="text-sm font-medium hover:text-primary transition-colors" href="/#inicio">Inicio</a>
-        <a class="text-sm font-medium hover:text-primary transition-colors" href="/#trabajos">Productos</a>
-        <a class="text-sm font-medium hover:text-primary transition-colors" href="/#carga-diseno">Diseña tu prenda</a>
-        <a class="text-sm font-medium hover:text-primary transition-colors" href="/#contacto">Contacto</a>
+        <a class="text-sm font-medium hover:text-primary transition-colors cursor-pointer" @click="scrollToSection('inicio')">Inicio</a>
+        <a class="text-sm font-medium hover:text-primary transition-colors cursor-pointer" @click="scrollToSection('trabajos')">Productos</a>
+        <a class="text-sm font-medium hover:text-primary transition-colors cursor-pointer" @click="scrollToSection('carga-diseno')">Diseña tu prenda</a>
+        <a class="text-sm font-medium hover:text-primary transition-colors cursor-pointer" @click="scrollToSection('contacto')">Contacto</a>
       </nav>
 
       <!-- Carrito y menú hamburguesa -->
@@ -48,31 +48,27 @@
       class="lg:hidden bg-background-light dark:bg-background-dark border-t border-slate-200/80 dark:border-slate-800/80"
     >
       <div class="px-4 py-4 space-y-4">
-        <router-link 
-          @click="closeMobileMenu"
-          class="block text-sm font-medium hover:text-primary transition-colors py-2"
-          to="/"
+        <a 
+          @click="scrollToSection('inicio')"
+          class="block text-sm font-medium hover:text-primary transition-colors py-2 cursor-pointer"
         >
           Inicio
-        </router-link>
+        </a>
         <a 
-          @click="closeMobileMenu"
-          class="block text-sm font-medium hover:text-primary transition-colors py-2"
-          href="#"
+          @click="scrollToSection('trabajos')"
+          class="block text-sm font-medium hover:text-primary transition-colors py-2 cursor-pointer"
         >
           Productos
         </a>
         <a 
-          @click="closeMobileMenu"
-          class="block text-sm font-medium hover:text-primary transition-colors py-2"
-          href="#"
+          @click="scrollToSection('carga-diseno')"
+          class="block text-sm font-medium hover:text-primary transition-colors py-2 cursor-pointer"
         >
           Diseña tu prenda
         </a>
         <a 
-          @click="closeMobileMenu"
-          class="block text-sm font-medium hover:text-primary transition-colors py-2"
-          href="#"
+          @click="scrollToSection('contacto')"
+          class="block text-sm font-medium hover:text-primary transition-colors py-2 cursor-pointer"
         >
           Contacto
         </a>
@@ -99,22 +95,94 @@ export default {
     toggleMobileMenu() {
       this.mobileMenuOpen = !this.mobileMenuOpen
     },
+    
     closeMobileMenu() {
       this.mobileMenuOpen = false
     },
+    
     handleResize() {
       // Cerrar menú móvil cuando la pantalla sea mayor a lg
       if (window.innerWidth >= 1024) {
         this.mobileMenuOpen = false
       }
+    },
+    
+    scrollToSection(sectionId) {
+      // Cerrar menú móvil si está abierto
+      this.closeMobileMenu();
+      
+      // Si estamos en la página de carrito, navegar al home primero
+      if (this.$route.path !== '/') {
+        this.$router.push('/');
+        // Esperar a que la navegación se complete antes de hacer scroll
+        setTimeout(() => {
+          this.performScroll(sectionId);
+        }, 100);
+      } else {
+        this.performScroll(sectionId);
+      }
+    },
+    
+    performScroll(sectionId) {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        // Calcular la posición considerando el header fijo
+        const headerHeight = 120; // Altura del header + margen de espaciado
+        const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - headerHeight;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
     }
   },
   mounted() {
     // Cerrar menú al cambiar el tamaño de la ventana
-    window.addEventListener('resize', this.handleResize)
+    window.addEventListener('resize', this.handleResize);
+    
+    // Cerrar menú al hacer click fuera de él
+    document.addEventListener('click', (event) => {
+      const header = this.$el;
+      const isClickInside = header.contains(event.target);
+      if (!isClickInside && this.mobileMenuOpen) {
+        this.closeMobileMenu();
+      }
+    });
   },
   beforeUnmount() {
-    window.removeEventListener('resize', this.handleResize)
+    window.removeEventListener('resize', this.handleResize);
   }
 }
 </script>
+
+<style scoped>
+/* Estilos para mejorar la apariencia de los enlaces */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #8b5cf6; /* Color purple-500 aproximado */
+}
+
+/* Asegurar que el header tenga un buen z-index */
+header {
+  z-index: 1000;
+}
+
+/* Mejorar la transición del menú móvil */
+.bg-background-light {
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.bg-background-dark {
+  background-color: rgba(17, 24, 39, 0.95);
+}
+
+.dark .bg-background-dark {
+  background-color: rgba(17, 24, 39, 0.95);
+}
+</style>
